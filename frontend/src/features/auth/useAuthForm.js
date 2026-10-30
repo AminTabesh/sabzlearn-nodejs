@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { AuthApiError, submitAuth } from "./authApi.js";
+import { useRef, useState } from "react";
+import toast from "react-hot-toast";
+import { submitAuth } from "./authApi.js";
 import { emptyRegister, loginPayload, registerPayload } from "./authPayload.js";
 
 export default function useAuthForm(onAuthenticated) {
@@ -7,64 +8,69 @@ export default function useAuthForm(onAuthenticated) {
   const [identifier, setIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [register, setRegister] = useState(emptyRegister);
-  const [error, setError] = useState("");
+  const lock = useRef(false);
   const [loading, setLoading] = useState(false);
 
   function switchMode(nextMode) {
     setMode(nextMode);
-    setError("");
   }
 
   function changeIdentifier(event) {
     setIdentifier(event.target.value);
-    setError("");
   }
 
   function changeLoginPassword(event) {
     setLoginPassword(event.target.value);
-    setError("");
   }
 
   function changeRegister(event) {
     const { name, value } = event.target;
     setRegister((current) => ({ ...current, [name]: value }));
-    setError("");
   }
 
   async function submit(event) {
     event.preventDefault();
-    if (loading) return;
-    setError("");
+    if (lock.current) return;
 
     let body;
     if (mode === "register") {
       if (register.password !== register.passwordConfirm) {
-        setError("تکرار رمز عبور با رمز عبور یکسان نیست.");
+        toast.error("تکرار رمز عبور با رمز عبور یکسان نیست.");
         return;
       }
       body = registerPayload(register);
     } else {
       if (!identifier.trim()) {
-        setError("نام کاربری یا ایمیل خود را وارد کنید.");
+        toast.error("نام کاربری یا ایمیل خود را وارد کنید.");
         return;
       }
       body = loginPayload(identifier, loginPassword);
     }
 
+    lock.current = true;
     setLoading(true);
+    const pending = toast.loading("در حال بررسی اطلاعات…");
     try {
       onAuthenticated(await submitAuth(mode, body));
+      toast.success("به رستا خوش آمدی.", { id: pending });
     } catch (caught) {
-      setError(caught instanceof AuthApiError
-        ? caught.message
-        : "ارتباط با سرور برقرار نشد. لطفاً اتصال خود را بررسی کنید.");
+      toast.error(caught.message, { id: pending });
     } finally {
+      lock.current = false;
       setLoading(false);
     }
   }
 
   return {
-    mode, identifier, loginPassword, register, error, loading,
-    switchMode, changeIdentifier, changeLoginPassword, changeRegister, submit,
+    mode,
+    identifier,
+    loginPassword,
+    register,
+    loading,
+    switchMode,
+    changeIdentifier,
+    changeLoginPassword,
+    changeRegister,
+    submit,
   };
 }

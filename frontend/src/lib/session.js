@@ -5,7 +5,10 @@ export function readSession() {
     const session = JSON.parse(sessionStorage.getItem(storageKey));
     if (!session?.user || !session?.accessToken) return null;
 
-    const encodedPayload = session.accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const encodedPayload = session.accessToken
+      .split(".")[1]
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
     const payload = JSON.parse(atob(encodedPayload));
     if (payload.exp && payload.exp * 1000 <= Date.now()) {
       clearSession();

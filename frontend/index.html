@@ -3,9 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f6f3ea" />
-    <meta name="description" content="رستا، جایی برای آغاز یادگیری و رشد مداوم." />
-    <title>رستا | یادگیری از همین‌جا شروع می‌شود</title>
+    <meta name="theme-color" content="#f5f7fb" />
+    <meta
+      name="description"
+      content="رستا، همراه مسیر یادگیری برنامه‌نویسی تو."
+    />
+    <title>رستا | شروع مسیر برنامه‌نویسی</title>
+    <script>
+      try {
+        const theme = localStorage.getItem("rasta-theme");
+        document.documentElement.dataset.theme =
+          theme === "dark" ||
+          (!theme && matchMedia("(prefers-color-scheme: dark)").matches)
+            ? "dark"
+            : "light";
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

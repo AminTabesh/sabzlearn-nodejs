@@ -123,4 +123,6 @@ exports.login = async (req, res) => {
   });
 };
 
-exports.getMe = async () => {};
+exports.getMe = async (req, res) => {
+  return res.status(200).json({ success: true, user: req.user });
+};

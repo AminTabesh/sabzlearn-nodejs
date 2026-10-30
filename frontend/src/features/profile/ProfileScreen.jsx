@@ -1,50 +1,271 @@
-import Brand from "../../components/Brand.jsx";
-import Icon from "../../components/Icon.jsx";
-
-function ProfileDetails({ user }) {
-  const items = [
-    ["نام و نام خانوادگی", user.name],
-    ["نام کاربری", user.username],
-    ["ایمیل", user.email],
-    ["شماره موبایل", user.phone],
-    ["نوع حساب", user.role === "ADMIN" ? "مدیر" : "کاربر"],
-  ];
-
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import {
+  ArrowUpLeft,
+  ShieldCheck,
+  PencilLine,
+  LockKeyhole,
+  UserRound,
+} from "lucide-react";
+import { useAccount } from "../../hooks/useSession";
+import { registerPayload } from "../auth/authPayload";
+import TextField from "../../components/TextField";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../../components/ui/card";
+export const roleLabel = (role) => (role === "ADMIN" ? "مدیر" : "کاربر");
+export function PageHeading({ eyebrow = "حساب کاربری", title, children }) {
+  useEffect(() => {
+    document.querySelector("main h1")?.focus();
+  }, []);
   return (
-    <dl className="profile-details">
-      {items.map(([label, value]) => (
-        <div className="detail-row" key={label}>
-          <dt>{label}</dt>
-          <dd dir={label === "ایمیل" || label === "شماره موبایل" ? "ltr" : "auto"}>{value || "—"}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="page-heading">
+      <span className="eyebrow">{eyebrow}</span>
+      <h1 tabIndex={-1}>{title}</h1>
+      <p>{children}</p>
+    </div>
   );
 }
-
-export default function ProfileScreen({ user, onLogout }) {
+export default function ProfileScreen() {
+  const {
+    session: { user },
+  } = useAccount();
   return (
-    <div className="profile-page">
-      <a href="#main-content" className="skip-link">رفتن به اطلاعات حساب</a>
-      <header className="profile-header"><Brand /><span className="profile-header-label">فضای شخصی تو</span></header>
-      <main id="main-content" className="profile-main">
-        <div className="profile-decor profile-decor-one" aria-hidden="true" /><div className="profile-decor profile-decor-two" aria-hidden="true" />
-        <section className="profile-intro">
-          <span className="form-kicker"><span className="kicker-line" /> حساب کاربری من</span>
-          <h1>خوش آمدی، <em>{user.name || user.username}</em><span className="heading-period">.</span></h1>
-          <p>اطلاعات حسابت اینجاست. مسیر یادگیری‌ات از همین نقطه شروع می‌شود.</p>
-        </section>
-        <section className="profile-card" aria-labelledby="profile-title">
-          <div className="profile-card-head">
-            <span className="profile-icon"><Icon name="user" size={26} /></span>
-            <div><h2 id="profile-title">اطلاعات حساب</h2><p>جزئیاتی که هنگام ثبت‌نام وارد کرده‌ای</p></div>
-            <span className="profile-badge"><Icon name="shield" size={15} /> حساب فعال</span>
+    <>
+      <PageHeading title={`سلام ${user.name}، خوش آمدی.`}>
+        این فضای توست؛ اطلاعاتت را مرور کن و حسابت را به‌روز نگه دار.
+      </PageHeading>
+      <section className="profile-banner">
+        <div>
+          <Badge className="banner-badge">فضای شخصی تو</Badge>
+          <h2>قدم بعدی، از همین‌جا.</h2>
+          <p>یک حساب مرتب، یک شروع آسوده.</p>
+          <Button asChild variant="secondary">
+            <Link to="/profile/edit">
+              ویرایش اطلاعات
+              <PencilLine size={16} />
+            </Link>
+          </Button>
+        </div>
+        <div className="workspace-art" aria-hidden="true">
+          <div className="art-square square-back" />
+          <div className="art-square square-front">
+            <UserRound size={56} strokeWidth={1.2} />
           </div>
-          <ProfileDetails user={user} />
-          <div className="profile-card-foot"><button type="button" className="logout-button" onClick={onLogout}><Icon name="logout" size={19} /> خروج از حساب</button></div>
-        </section>
-        <p className="profile-caption">یادگیری از یک قدم کوچک شروع می‌شود. ✳</p>
-      </main>
-    </div>
+          <span className="art-label">RASTA / YOUR SPACE</span>
+        </div>
+      </section>
+      <div className="profile-columns">
+        <Card>
+          <CardHeader className="card-heading">
+            <div>
+              <CardTitle>شناسنامه حساب</CardTitle>
+              <CardDescription>
+                اطلاعاتی که با رستا به اشتراک گذاشته‌ای
+              </CardDescription>
+            </div>
+            <Badge variant="secondary">{roleLabel(user.role)}</Badge>
+          </CardHeader>
+          <CardContent>
+            <dl className="details">
+              {[
+                ["نام و نام خانوادگی", user.name],
+                ["نام کاربری", user.username],
+                ["ایمیل", user.email],
+                ["شماره موبایل", user.phone],
+              ].map(([label, value], i) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd dir={i ? "ltr" : "auto"}>{value || "ثبت نشده"}</dd>
+                </div>
+              ))}
+            </dl>
+          </CardContent>
+        </Card>
+        <Card className="security-card">
+          <CardHeader>
+            <span className="icon-tile">
+              <ShieldCheck size={24} />
+            </span>
+            <CardTitle>امنیت، با چند قدم ساده</CardTitle>
+            <CardDescription>
+              رمز عبوری انتخاب کن که فقط خودت می‌دانی. اطلاعات ورودت را با
+              دیگران به اشتراک نگذار.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="full-width">
+              <Link to="/profile/password">
+                تغییر رمز عبور
+                <ArrowUpLeft size={17} />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+function AccountForm({ password = false }) {
+  const { session, request, updateUser } = useAccount();
+  const initial = password
+    ? { currentPassword: "", password: "", passwordConfirm: "" }
+    : Object.fromEntries(
+        ["name", "username", "email", "phone"].map((k) => [
+          k,
+          session.user[k] || "",
+        ]),
+      );
+  const [values, setValues] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const lock = useRef(false);
+  const change = (e) =>
+    setValues((v) => ({ ...v, [e.target.name]: e.target.value }));
+  async function submit(e) {
+    e.preventDefault();
+    if (lock.current) return;
+    if (password && values.password !== values.passwordConfirm)
+      return toast.error("تکرار رمز عبور با رمز جدید یکسان نیست.");
+    if (!password && !/^09[0-9]{9}$/.test(registerPayload(values).phone))
+      return toast.error("شماره موبایل باید ۱۱ رقم باشد و با ۰۹ شروع شود.");
+    lock.current = true;
+    setBusy(true);
+    const id = toast.loading("در حال ذخیره تغییرات…");
+    try {
+      const body = password ? values : registerPayload(values);
+      if (!password) {
+        delete body.password;
+        delete body.passwordConfirm;
+      }
+      const data = await request(
+        password
+          ? `/users/update-password/${session.user._id}`
+          : `/users/${session.user._id}`,
+        { method: "PUT", body, operation: password ? "password" : "profile" },
+      );
+      if (password) setValues(initial);
+      else updateUser(data.data);
+      toast.success(
+        password ? "رمز عبورت تغییر کرد." : "اطلاعات حسابت به‌روز شد.",
+        { id },
+      );
+    } catch (e) {
+      toast.error(e.message, { id });
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+  return (
+    <Card className="edit-card">
+      <CardHeader>
+        <span className="icon-tile">
+          {password ? <LockKeyhole /> : <PencilLine />}
+        </span>
+        <CardTitle>
+          {password ? "یک رمز تازه برای حسابت" : "اطلاعاتت را به‌روز کن"}
+        </CardTitle>
+        <CardDescription>
+          {password
+            ? "رمز جدید باید بین ۸ تا ۴۰ کاراکتر باشد."
+            : "ایمیل و شماره موبایلت را با دقت وارد کن."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={submit}>
+          <fieldset disabled={busy} className="account-fields">
+            {password ? (
+              <>
+                <TextField
+                  id="currentPassword"
+                  label="رمز عبور فعلی"
+                  type="password"
+                  autoComplete="current-password"
+                  value={values.currentPassword}
+                  onChange={change}
+                />
+                <TextField
+                  id="password"
+                  label="رمز عبور جدید"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={40}
+                  value={values.password}
+                  onChange={change}
+                />
+                <TextField
+                  id="passwordConfirm"
+                  label="تکرار رمز عبور جدید"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={40}
+                  value={values.passwordConfirm}
+                  onChange={change}
+                />
+              </>
+            ) : (
+              <div className="field-grid">
+                {[
+                  ["name", "نام و نام خانوادگی", "text", "name"],
+                  ["username", "نام کاربری", "text", "username"],
+                  ["email", "ایمیل", "email", "email"],
+                  ["phone", "شماره موبایل", "tel", "tel"],
+                ].map(([id, label, type, autoComplete]) => (
+                  <TextField
+                    key={id}
+                    {...{ id, label, type, autoComplete }}
+                    minLength={
+                      id === "name" || id === "username" ? 3 : undefined
+                    }
+                    maxLength={
+                      id === "name" ? 255 : id === "username" ? 100 : undefined
+                    }
+                    value={values[id]}
+                    onChange={change}
+                  />
+                ))}
+              </div>
+            )}
+            <div className="form-actions">
+              <Button type="submit" disabled={busy}>
+                {busy ? "در حال ذخیره…" : "ذخیره تغییرات"}
+              </Button>
+              <Button asChild variant="ghost">
+                <Link to="/profile">بازگشت به حساب</Link>
+              </Button>
+            </div>
+          </fieldset>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+export function ProfileEdit() {
+  return (
+    <>
+      <PageHeading title="ویرایش اطلاعات">
+        تغییرات کوچک، اطلاعات دقیق‌تر.
+      </PageHeading>
+      <AccountForm />
+    </>
+  );
+}
+export function PasswordScreen() {
+  return (
+    <>
+      <PageHeading title="تغییر رمز عبور">
+        کنترل امنیت حسابت دست توست.
+      </PageHeading>
+      <AccountForm password />
+    </>
   );
 }
